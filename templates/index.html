@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AegisShield - Advanced QR Spoofing and Detection platform powered by Machine Learning.">
+    <meta name="keywords" content="phishing, qr code safety, spoofing, cyber security, machine learning, scanner, flask">
+    <meta name="author" content="Antigravity">
+    <title>SMART  QR Spoofing and Detection</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    
+    <!-- Custom Style -->
+    <link href="static/styles.css" rel="stylesheet">
+    
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+    <!-- Top Header / Navigation -->
+    <header class="cyber-header">
+        <div class="brand">
+            <i class="fa-solid fa-shield-halved brand-icon text-cyan"></i>
+        </div>
+        
+        <div class="header-center">
+            <h1 class="header-title text-gradient-cyan">SMART QR SPOOFING AND DETECTION</h1>
+            <p class="header-subtitle">Detect malicious QR codes and spoofed links in real-time</p>
+        </div>
+        
+        <div class="system-status">
+            <span class="status-dot pulsing"></span>
+            <span class="status-text">SECURE CONSOLE ACTIVE</span>
+        </div>
+    </header>
+
+    <div class="container main-container">
+        <!-- Main Dashboard Card -->
+        <div class="dashboard-card">
+            <div class="row no-gutters">
+                
+                <!-- Left Pane: Scan Control -->
+                <div class="col-lg-6 pane-left">
+                    <div class="pane-content">
+                        <div class="pane-header">
+                            <h2 class="pane-title">
+                                <span class="pane-title-num">1</span> Scan or Enter QR Content
+                            </h2>
+                            <p class="pane-desc">Enter a URL / UPI / text or scan a QR code to analyze for potential threats.</p>
+                        </div>
+                        
+                        <form action="/" method="post" class="cyber-form">
+                            <div class="input-group-custom">
+                                <i class="fa-solid fa-link input-icon"></i>
+                                <input type="text" class="form__input" name="url" id="url" placeholder="Enter URL / UPI / text from QR" required value="{{ url if url else '' }}" />
+                                <label for="url" class="form__label">URL / QR Content</label>
+                            </div>
+                            <button type="submit" class="button button-primary"><i class="fa-solid fa-magnifying-glass"></i> Check Here</button>
+                        </form>
+
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+
+                        <div class="camera-scan-area">
+                            <div id="scan-instructions-container">
+                                <div class="scan-placeholder-icon">
+                                    <i class="fa-solid fa-qrcode scan-qr-icon"></i>
+                                    <i class="fa-solid fa-camera scan-cam-icon"></i>
+                                </div>
+                                <h4 class="scan-area-title">Scan QR Code</h4>
+                                <p class="scan-area-subtitle">Use camera to scan and analyze</p>
+                                
+                                <button type="button" id="start-scan" class="button button-secondary"><i class="fa-solid fa-camera"></i> Start QR Scan</button>
+                            </div>
+                            
+                            <div id="qr-reader-wrapper" style="width: 100%;">
+                                <div id="qr-reader" style="display: none;"></div>
+                            </div>
+                            <div id="qr-result" class="qr-result-box" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="privacy-note mt-auto pt-4 text-center">
+                            <span class="privacy-text"><i class="fa-solid fa-user-lock text-cyan"></i> We never store your data. All scans are private and secure.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Analysis Result -->
+                <div class="col-lg-6 pane-right">
+                    <div class="pane-content">
+                        <div class="pane-header">
+                            <h2 class="pane-title">
+                                <span class="pane-title-num">2</span> Analysis Result
+                            </h2>
+                        </div>
+                        
+                        {% if error %}
+                        <div class="alert alert-danger mb-4" style="margin-top: 0 !important; margin-bottom: 20px !important;">
+                            <div class="alert-icon-wrapper"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div><strong>System Error</strong><br>{{ error }}</div>
+                        </div>
+                        {% endif %}
+
+                        
+                        {% if xx == -1 %}
+                        <!-- Idle state -->
+                        <div class="idle-state">
+                            <div class="shield-pulse-wrapper">
+                                <div class="pulse-ring"></div>
+                                <div class="pulse-ring delay-1"></div>
+                                <i class="fa-solid fa-shield-halved idle-icon"></i>
+                            </div>
+                            <h4 class="idle-title">CONSOLE STANDBY</h4>
+                            <p class="idle-text">Enter target data on the left to initiate automated security heuristic analysis.</p>
+                        </div>
+                        {% else %}
+                        <!-- Result state -->
+                        <div class="result-details">
+                            
+                            <!-- Detected content section (High readability white card with dark navy text) -->
+                            <div class="source-content-section mb-2">
+                                <span class="section-badge"><i class="fa-solid fa-code text-cyan"></i> Scanned Content</span>
+                                <div class="payload-card">
+                                    <button class="copy-button" onclick="copyToClipboard()" title="Copy payload">
+                                        <i class="fa-regular fa-copy" id="copy-icon"></i>
+                                    </button>
+                                    <code class="payload-text" id="payload-code">{{ url }}</code>
+                                </div>
+                            </div>
+
+                            <div class="verdict-section">
+                                <span class="section-badge"><i class="fa-solid fa-shield-virus text-cyan"></i> Verdict</span>
+                                
+                                <!-- Custom verdict card containing dynamic verdict info -->
+                                <div class="verdict-card" id="verdict-card-container">
+                                    <div id="verdict-status-badge"></div>
+                                    <div class="verdict-status-title" id="verdict-status-title"></div>
+                                    <p class="verdict-support-text" id="verdict-support-text"></p>
+                                    <div class="risk-level-badge" id="risk-level-badge"></div>
+                                    <!-- Detection Reasons -->
+<div class="detection-reasons-section mt-3">
+
+    {% if reasons and reasons|length > 0 %}
+        <div class="reasons-card unsafe-reasons">
+            <div class="reasons-title">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Why is this QR/URL suspicious?
+            </div>
+
+            <ul class="reasons-list">
+                {% for reason in reasons %}
+                    <li>
+                        <i class="fa-solid fa-circle-xmark"></i>
+                        {{ reason }} 
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    {% else %}
+        <div class="reasons-card safe-reasons">
+            <div class="reasons-title">
+                <i class="fa-solid fa-circle-check"></i>
+                Why does it appear safe?
+            </div>
+
+            <ul class="reasons-list">
+                <li>
+                    <i class="fa-solid fa-check"></i>
+                    No suspicious URL indicators were detected
+                </li>
+                <li>
+                    <i class="fa-solid fa-check"></i>
+                    URL structure does not show known phishing characteristics
+                </li>
+                <li>
+                    <i class="fa-solid fa-check"></i>
+                    Machine-learning classifier identified the content as safe
+                </li>
+            </ul>
+        </div>
+    {% endif %}
+
+</div>
+                                </div>
+                                
+                                <!-- Dynamic secondary warning card corresponding to resultBox -->
+                                <div id="result-box" class="alert" style="display:none;"></div>
+                                
+                                <!-- Continue CTAs -->
+                                <div class="action-buttons-wrapper mt-3">
+                                    <button class="button button-proceed-danger" id="button2" role="button" onclick="window.open('{{url}}')" target="_blank"><i class="fa-solid fa-triangle-exclamation"></i> Still want to Continue</button>
+                                    <button class="button button-proceed-safe" id="button1" role="button" onclick="window.open('{{url}}')" target="_blank"><i class="fa-solid fa-circle-check"></i> Continue</button>
+                                </div>
+                            </div>
+
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <footer class="cyber-footer">
+        <p>&copy; 2026 AegisShield Threat Analysis Platform. All rights reserved.</p>
+    </footer>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+<!-- ✅ Result Display Logic -->
+<script>
+    let x = '{{xx}}';
+    let num = x * 100;
+    if (0 <= x && x < 0.50) {
+        num = 100 - num;
+    }
+    let txtx = Math.round(num).toString();
+
+    const resultBox = document.getElementById("result-box");
+    
+    const verdictCard = document.getElementById("verdict-card-container");
+    const verdictStatusBadge = document.getElementById("verdict-status-badge");
+    const verdictStatusTitle = document.getElementById("verdict-status-title");
+    const verdictSupportText = document.getElementById("verdict-support-text");
+    const riskLevelBadge = document.getElementById("risk-level-badge");
+
+    if (verdictCard) {
+        // Safe website URL
+        if (x <= 1 && x >= 0.50) {
+            verdictCard.className = "verdict-card state-safe";
+            verdictStatusBadge.innerHTML = '<span class="verdict-badge safe">SAFE</span>';
+            verdictStatusTitle.innerHTML = '<i class="fa-solid fa-circle-check"></i> Website is ' + txtx + '% safe to use.';
+            verdictSupportText.innerHTML = "No suspicious indicators were detected in the scanned content.";
+            riskLevelBadge.innerHTML = '<i class="fa-solid fa-shield-halved"></i> RISK LEVEL — LOW';
+            
+            resultBox.style.display = "flex";
+            resultBox.className = "alert alert-success";
+            resultBox.innerHTML = '<div class="alert-icon-wrapper"><i class="fa-solid fa-circle-check"></i></div><div><strong>This QR code appears safe.</strong></div>';
+            
+            document.getElementById("button1").style.display = "flex";
+            document.getElementById("button2").style.display = "none";
+        } 
+        // Unsafe website URL
+        else if (0 <= x && x < 0.50) {
+            verdictCard.className = "verdict-card state-unsafe";
+            verdictStatusBadge.innerHTML = '<span class="verdict-badge unsafe">UNSAFE</span>';
+            verdictStatusTitle.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Website is ' + txtx + '% unsafe to use.';
+            verdictSupportText.innerHTML = "This link was identified as suspicious and may contain phishing or QR spoofing attempts.";
+            riskLevelBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> RISK LEVEL — HIGH';
+            
+            resultBox.style.display = "flex";
+            resultBox.className = "alert alert-danger";
+            resultBox.innerHTML = '<div class="alert-icon-wrapper"><i class="fa-solid fa-triangle-exclamation"></i></div><div><strong>Warning</strong><br>This link might be unsafe!</div>';
+            
+            document.getElementById("button2").style.display = "flex";
+            document.getElementById("button1").style.display = "none";
+        }
+        // Non-URL QR detected
+        else if (x == -2) {
+            verdictCard.className = "verdict-card state-safe";
+            verdictStatusBadge.innerHTML = '<span class="verdict-badge safe">SAFE</span>';
+            verdictStatusTitle.innerHTML = '<i class="fa-solid fa-circle-check"></i> This QR code appears safe to use.';
+            verdictSupportText.innerHTML = "No suspicious indicators were detected in the scanned content.";
+            riskLevelBadge.innerHTML = '<i class="fa-solid fa-shield-halved"></i> RISK LEVEL — LOW';
+            
+            resultBox.style.display = "flex";
+            resultBox.className = "alert alert-success";
+            resultBox.innerHTML = '<div class="alert-icon-wrapper"><i class="fa-solid fa-shield-heart"></i></div><div>It appears safe (e.g., UPI, text, or app QR).</div>';
+            
+            document.getElementById("button1").style.display = "none";
+            document.getElementById("button2").style.display = "none";
+        }
+    }
+</script>
+
+<!-- ✅ Clipboard Copy Script -->
+<script>
+function copyToClipboard() {
+    const text = document.getElementById("payload-code").innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        const copyIcon = document.getElementById("copy-icon");
+        copyIcon.className = "fa-solid fa-check text-success";
+        setTimeout(() => {
+            copyIcon.className = "fa-regular fa-copy";
+        }, 2000);
+    }).catch(err => {
+        console.error("Copy failed: ", err);
+    });
+}
+</script>
+
+<!-- ✅ Camera Scanner Script -->
+<script>
+document.getElementById("start-scan").addEventListener("click", function() {
+    const qrReaderDiv = document.getElementById("qr-reader");
+    qrReaderDiv.style.display = "block";
+    
+    // Hide instructions inside scanner area
+    const instructions = document.getElementById("scan-instructions-container");
+    if (instructions) {
+        instructions.style.display = "none";
+    }
+
+    let resultBox = document.getElementById("qr-result");
+    resultBox.style.display = "block";
+    resultBox.innerHTML = "🎥 Initializing camera scanner...";
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+            console.log("Scanned QR:", decodedText);
+            html5QrCode.stop();
+
+            const urlInput = document.getElementById("url");
+            const form = document.querySelector("form");
+
+            // Show scanned content immediately
+            resultBox.innerHTML = "📄 <b>Scanned QR Content:</b><br>" + decodedText;
+
+            // Fill the form input
+            urlInput.value = decodedText.trim();
+
+            // Auto-submit for safety check
+            resultBox.innerHTML += "<br>🧠 Sending for safety check...";
+            form.submit();
+        },
+        (errorMessage) => {
+            // ignore continuous scanning errors
+        }
+    ).catch(err => {
+        console.error("Unable to start QR scanner:", err);
+        resultBox.innerHTML = "❌ Camera access denied or not available.";
+        if (instructions) {
+            instructions.style.display = "block"; // restore
+        }
+        alert("Could not start camera. Check browser permissions.");
+    });
+});
+</script>
+
+<!-- QR Spoofing Simulation -->
+<div class="spoofing-section"style="display:block; width:100%; clear:both; margin:40px auto; text-align:center; padding:30px; box-sizing:border-box;">
+
+    <h2>QR Spoofing Simulation</h2>
+    <p>
+    This module demonstrates a controlled QR spoofing scenario
+    for security testing and detection.
+</p>
+
+    <form action="/generate-spoof" method="POST">
+        <input
+            type="text"
+            name="original_url"
+            placeholder="Enter demo URL, e.g. https://example.com" 
+            required 
+        > 
+ 
+        <button type="submit"> 
+            Generate Spoofed QR 
+        </button> 
+    </form> 
+ 
+    {% if spoofed_url %} 
+        <div class="spoof-result"> 
+            <h3>Simulated Spoofed URL</h3> 
+ 
+            <p>{{ spoofed_url }}</p> 
+ 
+            <h3>Generated Spoofed QR</h3> 
+ 
+            <img 
+                src="{{ spoofed_qr }}" 
+                alt="Generated Spoofed QR" 
+                width="250" 
+            > 
+ 
+            <p> 
+                Scan this QR using the QR scanner above 
+                to test the detection system. 
+            </p> 
+        </div> 
+    {% endif %} 
+</div> 
+</body> 
+</html> 
